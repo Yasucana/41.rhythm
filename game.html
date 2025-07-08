@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rhythm Game</title>
+  <style>
+    body { margin: 0; background: #111; color: white; font-family: sans-serif; overflow: hidden; text-align: center; }
+    #game { display: flex; justify-content: center; gap: 10px; height: 90vh; align-items: flex-end; margin-top: 5vh; }
+    .lane { width: 80px; height: 100%; background: #222; position: relative; border: 2px solid #555; }
+    .note { width: 80px; height: 20px; background: red; position: absolute; top: -20px; }
+    .hit-zone { height: 20px; background: green; position: absolute; bottom: 0; width: 100%; opacity: 0.5; }
+    #score { position: absolute; top: 10px; left: 10px; font-size: 20px; }
+    #startBtn { padding: 10px 20px; font-size: 18px; margin-top: 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <button id="startBtn">Start Game</button>
+  <div id="game" style="display:none;">
+    <div class="lane" data-key="a"><div class="hit-zone"></div></div>
+    <div class="lane" data-key="s"><div class="hit-zone"></div></div>
+    <div class="lane" data-key="d"><div class="hit-zone"></div></div>
+    <div class="lane" data-key="f"><div class="hit-zone"></div></div>
+  </div>
+  <audio id="bgm" src="https://cdn.pixabay.com/audio/2022/03/15/audio_3c2c612b62.mp3"></audio>
+  <script>
+    const lanes = document.querySelectorAll('.lane');
+    const scoreDisplay = document.getElementById('score');
+    const bgm = document.getElementById('bgm');
+    const game = document.getElementById('game');
+    const startBtn = document.getElementById('startBtn');
+    let score = 0;
+    let gameInterval;
+
+    function spawnNote(lane) {
+      const note = document.createElement('div');
+      note.classList.add('note');
+      lane.appendChild(note);
+      let top = -20;
+      const interval = setInterval(() => {
+        top += 4;
+        note.style.top = top + 'px';
+        if (top > lane.offsetHeight) {
+          lane.removeChild(note);
+          clearInterval(interval);
+        }
+      }, 16);
+      note.dataset.interval = interval;
+    }
+
+    function gameLoop() {
+      lanes.forEach(lane => {
+        if (Math.random() < 0.02) spawnNote(lane);
+      });
+    }
+
+    function checkHit(key) {
+      const lane = document.querySelector(`.lane[data-key="${key}"]`);
+      if (!lane) return;
+      const notes = lane.querySelectorAll('.note');
+      for (let note of notes) {
+        const noteTop = parseFloat(note.style.top);
+        const laneHeight = lane.offsetHeight;
+        if (noteTop >= laneHeight - 40 && noteTop <= laneHeight - 20) {
+          clearInterval(note.dataset.interval);
+          lane.removeChild(note);
+          score += 100;
+          scoreDisplay.textContent = `Score: ${score}`;
+          break;
+        }
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      checkHit(e.key.toLowerCase());
+    });
+
+    startBtn.onclick = () => {
+      startBtn.style.display = 'none';
+      game.style.display = 'flex';
+      bgm.play();
+      gameInterval = setInterval(gameLoop, 100);
+    };
+  </script>
+</body>
+</html>
